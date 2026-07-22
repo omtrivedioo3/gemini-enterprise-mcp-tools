@@ -1,0 +1,67 @@
+openapi: 3.0.0
+info:
+  title: "Enterprise Omni Agent"
+  version: "1.0.0"
+  description: "A suite of tools including Wikipedia search, Math operations, and live GitHub stats."
+servers:
+  # Replace this URL with your actual Google Cloud Run URL once deployed
+  - url: "https://your-cloud-run-url.a.run.app"
+paths:
+  /search_wikipedia:
+    post:
+      summary: "Search Wikipedia"
+      operationId: "search_wikipedia"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                query:
+                  type: string
+                limit:
+                  type: integer
+                  default: 5
+              required: ["query"]
+      responses:
+        "200":
+          description: "Successful response"
+
+  /get_github_user:
+    post:
+      summary: "Fetch real-time GitHub user stats"
+      operationId: "get_github_user"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+              required: ["username"]
+      responses:
+        "200":
+          description: "Successful response"
+
+  /add:
+    post:
+      summary: "Add two numbers"
+      operationId: "add"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                a:
+                  type: number
+                b:
+                  type: number
+              required: ["a", "b"]
+      responses:
+        "200":
+          description: "Successful response"
