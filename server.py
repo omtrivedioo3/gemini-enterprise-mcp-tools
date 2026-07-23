@@ -156,7 +156,13 @@ if __name__ == "__main__":
     from starlette.responses import StreamingResponse
 
     app = FastAPI()
-    client = httpx.AsyncClient(base_url="http://127.0.0.1:8001")
+    client = None
+
+    @app.on_event("startup")
+    async def startup():
+        global client
+        # timeout=None is required because Streamable HTTP holds an SSE connection open
+        client = httpx.AsyncClient(base_url="http://0.0.0.0:8001", timeout=None)
 
     @app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
     async def proxy(request: Request, path: str):
@@ -191,7 +197,7 @@ if __name__ == "__main__":
     asyncio.run(
         mcp.run_async(
             transport="http",
-            host="127.0.0.1",
+            host="0.0.0.0",
             port=8001,
             path="/mcp",
         )
