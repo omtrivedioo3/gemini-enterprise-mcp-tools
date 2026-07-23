@@ -147,13 +147,52 @@ def divide(a: float, b: float) -> str:
     return str(a / b)
 
 if __name__ == "__main__":
-    print(f"Starting MCP server on port {os.getenv('PORT', 8080)}")
+    port = int(os.environ.get("PORT", 8080))
+    
+    # 1. We create a tiny Proxy Server to intercept Agent Builder's requests
+    import threading
+    import uvicorn
+    from fastapi import FastAPI, Request
+    from starlette.responses import StreamingResponse
 
+    app = FastAPI()
+    client = httpx.AsyncClient(base_url="http://127.0.0.1:8001")
+
+    @app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+    async def proxy(request: Request, path: str):
+        url = httpx.URL(path=request.url.path, query=request.url.query.encode("utf-8"))
+        headers = dict(request.headers)
+        
+        # INJECT THE MISSING HEADER FOR THE AGENT BUILDER!
+        headers["accept"] = "application/json, text/event-stream"
+        
+        req = client.build_request(
+            request.method,
+            url,
+            headers=headers,
+            content=await request.body()
+        )
+        resp = await client.send(req, stream=True)
+        return StreamingResponse(
+            resp.aiter_raw(),
+            status_code=resp.status_code,
+            headers=resp.headers
+        )
+
+    # 2. Run the proxy on the public Cloud Run port
+    def run_proxy():
+        uvicorn.run(app, host="0.0.0.0", port=port, log_level="warning")
+        
+    threading.Thread(target=run_proxy, daemon=True).start()
+
+    # 3. Run the actual strict MCP server on a hidden local port (8001)
+    os.environ["PORT"] = "8001"
+    print(f"Starting MCP server proxy on port {port} for Gemini Enterprise...")
     asyncio.run(
         mcp.run_async(
             transport="http",
-            host="0.0.0.0",
-            port=int(os.getenv("PORT", "8080")),
+            host="127.0.0.1",
+            port=8001,
             path="/mcp",
         )
     )
