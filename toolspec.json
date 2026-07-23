@@ -1,0 +1,36 @@
+{
+  "tools": [
+    {
+      "name": "search_wikipedia",
+      "description": "Search Wikipedia articles."
+    },
+    {
+      "name": "get_wikipedia_summary",
+      "description": "Get the summary of a Wikipedia article."
+    },
+    {
+      "name": "get_github_user",
+      "description": "Get GitHub user information."
+    },
+    {
+      "name": "get_current_time",
+      "description": "Get the current UTC time."
+    },
+    {
+      "name": "add",
+      "description": "Add two numbers."
+    },
+    {
+      "name": "subtract",
+      "description": "Subtract two numbers."
+    },
+    {
+      "name": "multiply",
+      "description": "Multiply two numbers."
+    },
+    {
+      "name": "divide",
+      "description": "Divide two numbers."
+    }
+  ]
+}
