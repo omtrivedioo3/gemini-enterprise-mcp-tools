@@ -1,8 +1,14 @@
 import httpx
 from fastmcp import FastMCP
+import asyncio
+
+import os
+port = int(os.environ.get("PORT", 8080))
 
 mcp = FastMCP(
-    name="EnterpriseAgent"
+    name="EnterpriseAgent",
+    host="0.0.0.0",
+    port=port
 )
 
 @mcp.tool()
@@ -143,13 +149,13 @@ def divide(a: float, b: float) -> str:
     return str(a / b)
 
 if __name__ == "__main__":
-    import os
-    port = os.environ.get("PORT")
-    if port:
-        print(f"Starting Web Server on port {port} for Gemini Enterprise...")
-        mcp.settings.host = "0.0.0.0"
-        mcp.settings.port = int(port)
-        mcp.run(transport='streamable-http')
-    else:
-        # Run the server locally using standard input/output
-        mcp.run()
+    print(f"Starting MCP server on port {os.getenv('PORT', 8080)}")
+
+    asyncio.run(
+        mcp.run_async(
+            transport="http",
+            host="0.0.0.0",
+            port=int(os.getenv("PORT", "8080")),
+            path="/mcp",
+        )
+    )
