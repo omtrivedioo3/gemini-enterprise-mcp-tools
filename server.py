@@ -142,17 +142,14 @@ def divide(a: float, b: float) -> str:
         return "Error: Cannot divide by zero."
     return str(a / b)
 
-import asyncio
-import os
-
 if __name__ == "__main__":
-    print(f"Starting MCP server on port {os.getenv('PORT', 8080)}")
-
-    asyncio.run(
-        mcp.run_async(
-            transport="http",
-            host="0.0.0.0",
-            port=int(os.getenv("PORT", "8080")),
-            path="/mcp",
-        )
-    )
+    import os
+    port = os.environ.get("PORT")
+    if port:
+        print(f"Starting Web Server on port {port} for Gemini Enterprise...")
+        mcp.settings.host = "0.0.0.0"
+        mcp.settings.port = int(port)
+        mcp.run(transport='streamable-http')
+    else:
+        # Run the server locally using standard input/output
+        mcp.run()
