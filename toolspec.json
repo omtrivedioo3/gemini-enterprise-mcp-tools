@@ -2,35 +2,140 @@
   "tools": [
     {
       "name": "search_wikipedia",
-      "description": "Search Wikipedia articles."
+      "description": "Search Wikipedia for matching articles.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Wikipedia search query"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum number of search results",
+            "default": 5
+          }
+        },
+        "required": [
+          "query"
+        ]
+      }
     },
     {
       "name": "get_wikipedia_summary",
-      "description": "Get the summary of a Wikipedia article."
+      "description": "Get the summary of a Wikipedia article.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Exact Wikipedia article title"
+          }
+        },
+        "required": [
+          "title"
+        ]
+      }
     },
     {
       "name": "get_github_user",
-      "description": "Get GitHub user information."
+      "description": "Fetch GitHub user information.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "GitHub username"
+          }
+        },
+        "required": [
+          "username"
+        ]
+      }
     },
     {
       "name": "get_current_time",
-      "description": "Get the current UTC time."
+      "description": "Get the current UTC time.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
     },
     {
       "name": "add",
-      "description": "Add two numbers."
+      "description": "Add two numbers.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "a": {
+            "type": "number"
+          },
+          "b": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "a",
+          "b"
+        ]
+      }
     },
     {
       "name": "subtract",
-      "description": "Subtract two numbers."
+      "description": "Subtract two numbers.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "a": {
+            "type": "number"
+          },
+          "b": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "a",
+          "b"
+        ]
+      }
     },
     {
       "name": "multiply",
-      "description": "Multiply two numbers."
+      "description": "Multiply two numbers.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "a": {
+            "type": "number"
+          },
+          "b": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "a",
+          "b"
+        ]
+      }
     },
     {
       "name": "divide",
-      "description": "Divide two numbers."
+      "description": "Divide two numbers.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "a": {
+            "type": "number"
+          },
+          "b": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "a",
+          "b"
+        ]
+      }
     }
   ]
 }
