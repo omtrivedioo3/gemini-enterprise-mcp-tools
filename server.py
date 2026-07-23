@@ -6,9 +6,7 @@ import os
 port = int(os.environ.get("PORT", 8080))
 
 mcp = FastMCP(
-    name="EnterpriseAgent",
-    host="0.0.0.0",
-    port=port
+    name="EnterpriseAgent"
 )
 
 @mcp.tool()
