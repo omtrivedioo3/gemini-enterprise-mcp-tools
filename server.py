@@ -1,8 +1,9 @@
 import httpx
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 
-# Initialize the FastMCP server
-mcp = FastMCP("EnterpriseAgent")
+mcp = FastMCP(
+    name="EnterpriseAgent"
+)
 
 @mcp.tool()
 async def search_wikipedia(query: str, limit: int = 5) -> str:
@@ -141,15 +142,17 @@ def divide(a: float, b: float) -> str:
         return "Error: Cannot divide by zero."
     return str(a / b)
 
+import asyncio
+import os
+
 if __name__ == "__main__":
-    import os
-    # Cloud Run injects the 'PORT' environment variable.
-    # If it exists, we run as a Web Server (SSE) so Gemini Enterprise can connect to it over the internet.
-    # If not, we run as a local Terminal tool (stdio) for testing in the Inspector.
-    port = os.environ.get("PORT")
-    if port:
-        print(f"Starting Web Server on port {port} for Gemini Enterprise...")
-        mcp.run(transport='sse', host="0.0.0.0", port=int(port))
-    else:
-        # Run the server locally using standard input/output
-        mcp.run()
+    print(f"Starting MCP server on port {os.getenv('PORT', 8080)}")
+
+    asyncio.run(
+        mcp.run_async(
+            transport="http",
+            host="0.0.0.0",
+            port=int(os.getenv("PORT", "8080")),
+            path="/mcp",
+        )
+    )
