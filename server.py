@@ -195,7 +195,7 @@ if __name__ == "__main__":
     os.environ["PORT"] = "8001"
     print(f"Starting MCP server proxy on port {port} for Gemini Enterprise...")
     asyncio.run(
-        mcp.run_async(
+        mcp.run_http_async(
             transport="http",
             host="0.0.0.0",
             port=8001,
