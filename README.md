@@ -1,56 +1,86 @@
-# Gemini Enterprise MCP Tools
+# Enterprise MCP Agent Architecture
 
-This repository contains a custom **Model Context Protocol (MCP)** server built in Python. It acts as an "Omni Agent" that provides AI models (like Gemini) with external tools so they can perform tasks they natively cannot do, such as reading real-time data or performing complex math.
+This repository contains a modular, Serverless AI architecture built completely independently of the Google Agent Development Kit (ADK). It leverages the pure `google.genai` SDK and the open-source Model Context Protocol (MCP), deeply integrated into the Gemini Enterprise (Vertex AI Agent Builder) UI via OpenAPI.
 
-This project is specifically designed to be deployed to **Google Cloud Run** and integrated into **Gemini Enterprise via Vertex AI Extensions**.
+## 🏗️ Architecture
 
-## 🛠️ Tools Included
+1. **MCP Tool Server (`server.py`)**: A standard FastMCP server that exposes tools (Wikipedia, Math, GitHub). Completely decoupled from any LLM logic.
+2. **Custom Gemini App (`fastapi_app.py`)**: A standalone FastAPI Python backend. It connects to the MCP server, processes user prompts using the Gemini 2.5 Flash model via the standard SDK, handles complex multi-tool execution loops, and returns clean JSON.
+3. **Gemini Enterprise Playbook**: The Google Cloud enterprise front-end. It uses the `openapi.json` spec to seamlessly route user messages from the enterprise UI directly to the Custom Gemini App.
 
-This single MCP server exposes **8 different tools** to the AI:
+## 🚀 Deployment Instructions
 
-1. **`get_current_time`**: Allows the AI to know the exact atomic date and time (AI models do not have an internal clock).
-2. **`get_github_user`**: Fetches live, real-time statistics (followers, repos, bio) for any GitHub user via the public GitHub API.
-3. **`search_wikipedia`**: Searches Wikipedia and returns a list of matching article titles (The "Search" step).
-4. **`get_wikipedia_summary`**: Reads the introductory paragraphs of a specific Wikipedia article (The "Read" step).
-5. **`add`**: Adds two numbers together.
-6. **`subtract`**: Subtracts two numbers.
-7. **`multiply`**: Multiplies two numbers.
-8. **`divide`**: Divides two numbers safely.
-
-## 🚀 How to Test Locally
-
-If you want to test the server locally on your machine, we use the visual **MCP Inspector**.
-
-Run this command in the terminal at the root of the project:
+### 1. Deploy the MCP Server
 ```bash
-npx @modelcontextprotocol/inspector uv run --with mcp --with httpx server.py
+gcloud run deploy gemini-enterprise-mcp-tools \
+  --source . \
+  --region us-central1 \
+  --allow-unauthenticated \
+  --command "uvicorn,server:app,--host,0.0.0.0,--port,8080"
 ```
-This will open a local web dashboard where you can manually click on the tools, provide arguments, and see the exact JSON outputs that Gemini would receive.
 
-## ☁️ How to Deploy to Gemini Enterprise
+### 2. Deploy the FastAPI App
+```bash
+gcloud run deploy gemini-enterprise-mcp-app \
+  --source . \
+  --region us-central1 \
+  --allow-unauthenticated \
+  --command "uvicorn,fastapi_app:app,--host,0.0.0.0,--port,8080"
+```
+*(Note: Ensure you are authenticated and have the correct GCP project set up.)*
 
-Because Gemini Enterprise is a cloud platform, it cannot run local scripts on your laptop. You must deploy this server to the cloud.
+---
 
-### 1. Deploy the Code
-This repository includes a `Dockerfile` that packages the Python server into a Web Server using Server-Sent Events (SSE). 
-- Go to the **Google Cloud Console**.
-- Navigate to **Cloud Run**.
-- Click **Create Service** -> **Continuously deploy from a repository**.
-- Link this GitHub repository. Cloud Run will automatically build the `Dockerfile` and give you a public URL (e.g., `https://your-agent.a.run.app`).
+## 🔗 How to Integrate with Gemini Enterprise (Vertex AI Agent Builder)
 
-### 2. Update the OpenAPI Schema
-- Open the `openapi.yaml` file in this repository.
-- Replace the `- url: ...` placeholder on line 8 with your new Cloud Run URL.
+Follow these exact steps to embed the custom FastAPI app into the Gemini Enterprise UI.
 
-### 3. Connect to Vertex AI
-- In the Google Cloud Console, navigate to **Vertex AI > Agent Builder > Extensions**.
-- Click **Create Extension**.
-- Name it (e.g., "Enterprise Omni Tools") and upload your updated `openapi.yaml` file.
-- Gemini Enterprise will instantly register the 8 tools and allow your workspace users to trigger them during chat!
+### Step 1: Prepare the OpenAPI Spec
+1. Get the auto-generated OpenAPI spec from the FastAPI app (usually at `/openapi.json`).
+2. Open `openapi.json` and make two manual modifications for Agent Builder compatibility:
+   * **Downgrade Version:** Change `"openapi": "3.1.0"` to `"openapi": "3.0.0"`.
+   * **Add Server URL:** Add the Cloud Run URL to the top level:
+     ```json
+     "servers": [
+       {
+         "url": "https://<YOUR_FASTAPI_CLOUD_RUN_URL>"
+       }
+     ]
+     ```
 
-## 📂 Project Structure
+### Step 2: Create the Agent
+1. In the Google Cloud Console, search for **Agent Builder** (or Gemini Enterprise Agent Platform).
+2. Go to **Apps** -> **Create App**.
+3. Select **Agent** -> **Build your own**.
+4. Give it a Display Name. **CRITICAL:** Set the Location to `us-central1`. Click Create.
 
-- `server.py`: The core Python logic using the `FastMCP` library. Contains all 8 tool definitions.
-- `Dockerfile`: The instructions for Google Cloud Run on how to build and host the Web Server.
-- `openapi.yaml`: The schema map required by Vertex AI to understand the structure of the tools.
-- `client.py` *(Optional)*: A local Python script used for simulating how Gemini Enterprise routes tool calls under the hood.
+### Step 3: Create the OpenAPI Tool
+1. In your new Agent dashboard, click **Tools** on the left menu.
+2. Click **Create Tool** -> **OpenAPI**.
+3. **Name:** `CustomGeminiApp`
+4. **Description:** "Custom Gemini Backend via REST API."
+5. **Schema:** Paste your modified `openapi.json` into the JSON block.
+6. **Authentication:** 
+   * **Authentication Type:** Select `Service agent token`
+   * **Service agent auth type:** Select `ID token`
+7. Click **Save**.
+
+### Step 4: Configure the Playbook
+1. Go to **Playbooks** on the left menu and click on the **Default Generative Playbook**.
+2. **Goal:** Paste the following:
+   > `You are an enterprise AI assistant. Your goal is to answer user questions by routing them to the custom Gemini backend.`
+3. **Instructions:** Paste the following markdown list:
+   ```markdown
+   - When a user asks a question, you MUST use the ${TOOL: CustomGeminiApp}.
+   - Pass the user's message as the `prompt` parameter to the tool.
+   - Take the `response` string returned by the tool and display it directly to the user.
+   ```
+4. **Available Tools:** At the bottom of the page, ensure the checkbox next to `CustomGeminiApp` is checked.
+5. Click **Save**.
+
+### Step 5: Test & Publish!
+1. Use the **Preview** chat on the right side of the screen to send a test message.
+2. Once working, go to the **Integrations** tab to generate a Web Widget (Dialogflow Messenger) snippet, or connect it to Google Chat, Slack, or Microsoft Teams.
+
+---
+**Cost:** The entire backend is Serverless (Cloud Run scales to zero) and the Playbook has no hourly uptime fee. This architecture costs $0.00 when idle!
