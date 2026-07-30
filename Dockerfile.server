@@ -5,10 +5,9 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY fastapi_app.py .
-COPY index.html .
+COPY mcp_server.py .
 
 ENV PORT=8080
 EXPOSE 8080
 
-CMD ["python", "fastapi_app.py"]
+CMD ["python", "mcp_server.py"]

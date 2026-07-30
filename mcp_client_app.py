@@ -13,7 +13,7 @@ os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
 os.environ["GOOGLE_CLOUD_PROJECT"] = "mcp-integration-503215"
 os.environ["GOOGLE_CLOUD_LOCATION"] = "us-west1"
 
-MCP_SERVER_URL = "https://gemini-enterprise-mcp-tools-ygbmijfr6q-uc.a.run.app/mcp"
+MCP_SERVER_URL = os.environ.get("MCP_SERVER_URL", "http://localhost:8080/mcp")
 
 app = FastAPI(
     title="Gemini Content Generator API",
@@ -24,7 +24,7 @@ from fastapi.responses import HTMLResponse
 
 @app.get("/", response_class=HTMLResponse)
 async def index():
-    with open("index.html", "r") as f:
+    with open("client_ui.html", "r") as f:
         return f.read()
 
 class ChatRequest(BaseModel):

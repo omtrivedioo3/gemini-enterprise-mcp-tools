@@ -5,9 +5,10 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY server.py .
+COPY mcp_client_app.py .
+COPY client_ui.html .
 
 ENV PORT=8080
 EXPOSE 8080
 
-CMD ["python", "server.py"]
+CMD ["python", "mcp_client_app.py"]
